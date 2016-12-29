@@ -1,0 +1,78 @@
+Тестим Sagas (Пример взят с VivaCity/UserSaga/ * userAvailabilityRemoveAttempt)
+
+const stepper = (fn) => (mock) => fn.next(mock).value;
+const api = API.create();
+userId = 777
+let SuccessResponce = {
+  status: 200,
+  data: {
+    msg: 'It is OK'
+  }
+}
+
+
+Нам понадобится: Redux, Saga, SagaTest
+	1.	Смотрим в саге название самой саги
+	2.	Создаем step 
+
+const step = stepper(userAvailabilityRemoveAttempt(api, Immutable({
+    availability: [{
+      duration: 120,
+      active: true
+    }],
+    position: 0
+  })));
+
+userAvailabilityRemoveAttempt - название саги
+смотрим, сага принимает api и action
+api вверху, а action мы формируем (Immutable нужен, т.к. сага может пользоваться данными как Immutable объектами)
+Смотрим, что принимает Action в Redux и делаем похожий
+Все, step создан.
+
+Теперь смотрим, что делает Сага, и имитируем тоже самое, каждый yield это отдельный step, первое что делает сага это  yield select(getUserId);, значит нам нужно сделать следующее: t.deepEqual(step(), select(getUserId));  (getUserId возвращает user id)
+Ура, первый тест пройден
+
+Теперь смотрим какой yield выполняется следующим (теперь в step(userId) передаем, то что получили в предыдущем т.е. user id, userId задаем сами)
+
+yield select(getToken); в тестах пишем   t.deepEqual(step(userId), select(getToken));
+
+Следующий  yield call(api.updateUserAvailability, userId, removeFromAvailability(action.availability, action.position), { token });
+Тут мы выполняем запрос смотрим какие параметры передаются и делам тоже самое
+ 
+  t.deepEqual(step(token), call(api.updateUserAvailability, userId, Immutable([]), {
+    token
+  }));
+
+removeFromAvailability(action.availability, action.position) возвращает массив, в котором удалена запись position: 0 ,которую мы передали в step, т.к. у нас была всего одна запись, массив оказался пустой
+Immutable([]), ну и токен у нас не менялся, таким образом у нас должен выполниться 3й тест
+
+Ну и наконец в случае Success должен выполниться yield put(UserActions.userAvailabilityRemoveSuccess());
+В тестах пишем 
+
+t.deepEqual(step(SuccessResponce), put(UserActions.userAvailabilityRemoveSuccess()))
+
+Так как у SuccessResponce есть полe status: 200, в саге выполнится yield put(UserActions.userAvailabilityRemoveSuccess()); в итоге все yield проверены и все тесты пройдены =)
+
+Конечный тест:
+
+test('userAvailabilityRemoveAttempt - success', t => {
+  const userId = 1
+  const step = stepper(userAvailabilityRemoveAttempt(api, Immutable({
+    availability: [{
+      duration: 120,
+      active: true
+    }],
+    position: 0
+  })));
+
+  t.deepEqual(step(), select(getUserId));
+  t.deepEqual(step(userId), select(getToken));
+  t.deepEqual(step(token), call(api.updateUserAvailability, userId, Immutable([]), {
+    token
+  }));
+  t.deepEqual(step(SuccessResponce), put(UserActions.userAvailabilityRemoveSuccess()))
+});
+
+																																				Артем Косякевич 2016
+
+
