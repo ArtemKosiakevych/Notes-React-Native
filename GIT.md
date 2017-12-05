@@ -5,7 +5,7 @@
 `git checkout -- .`
 
 ## Stash (discard unstated files)
-`git stash save --keep-index`
+`git stash`
 After that, you can drop that stash with a `git stash drop` command if you like.
 
 ## Merge commit into current branch
