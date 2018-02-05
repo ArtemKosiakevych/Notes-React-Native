@@ -1,0 +1,68 @@
+If you configure bitrise ios, let's configure android:
+
+- first, create in bitrise android app and add to code signing keystore in `Android Keystore & Generic File Storage field`
+- create app in google developer console (beta version)
+- don't forget to add FASTLANE_PASSWORD like in bitrise ios
+- go to android studio project, gradle properties and paste:
+
+```
+MYAPP_RELEASE_STORE_FILE=yourKeyStore.jks  // (keystore file must be in android/app folder)
+MYAPP_RELEASE_KEY_ALIAS=yourAlias
+MYAPP_RELEASE_STORE_PASSWORD=yourPass
+MYAPP_RELEASE_KEY_PASSWORD=yourPass
+```
+
+- then add in app.gradle signing config
+
+```
+   signingConfigs {
+        release {
+            if (project.hasProperty('MYAPP_RELEASE_STORE_FILE')) {
+                storeFile file(MYAPP_RELEASE_STORE_FILE)
+                storePassword MYAPP_RELEASE_STORE_PASSWORD
+                keyAlias MYAPP_RELEASE_KEY_ALIAS
+                keyPassword MYAPP_RELEASE_KEY_PASSWORD
+            }
+        }
+    }
+```
+
+- in build types release add:
+
+```
+ ...
+ signingConfig signingConfigs.release
+```
+- for auto increment code version add to build.gradle:
+
+```
+          def versionPropsFile = file('version.properties')
+            def Properties versionProps = new Properties()
+            versionProps.load(new FileInputStream(versionPropsFile))
+            def code = versionProps['VERSION_CODE'].toInteger() + 1
+            versionProps['VERSION_CODE']=code.toString()
+            versionProps.store(versionPropsFile.newWriter(), null)
+            defaultConfig {
+                versionCode code
+            }
+```
+create in app folder version.properties with:
+```
+VERSION_CODE=1
+```
+each build will increase this digit
+- and finally in fastfile add: (in this case fastlane folder in root directory)
+
+```
+  lane :beta do
+    gradle(task: 'clean', project_dir: "android/") # Clean the Gradle project
+    gradle(task: 'assembleRelease', project_dir: "android/")
+    supply(
+      track: "beta",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+  )
+  end
+```
+this lane upload beta version to google play

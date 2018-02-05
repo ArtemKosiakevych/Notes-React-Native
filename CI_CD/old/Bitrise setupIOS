@@ -1,0 +1,48 @@
+## Create app https://www.bitrise.io/dashboard
+ - connect with github
+ - request admin permission for repo
+ - in workflow tab choose "Do anything with Script step" and replace echo "Hello World" with `npm i` or other commands (npm test etc.)
+ - in dev console create 3 provision profile : iStore Dev, AppStore Production, AdHoc
+ - archive and upload to appStore your first App version
+ - configure testFlight in iTunes Connect manually and make sure all worked fine
+ - next go to workflow "Code signing & Files" copy command and get provision profiles that you created above, paste all profiles in bitrise fields (including certificate)
+ - Go to workflow "Secret Env var" and add your appleId pass with key FASTLANE_PASSWORD
+ - In workflow editor add last step (+ button) and find fastlane
+ - In fastlane lane write name of lane from FastFile that should be execute (in this example "beta")
+ - Fill working directory field $BITRISE_SOURCE_DIR/ios
+ - In bitrise.yml insert something like bellow, it's configure what and when build with bitrise
+```
+trigger_map:
+- pull_request_source_branch: "*"
+  pull_request_target_branch: "*"
+  workflow: debug
+- push_branch: master
+  workflow: master
+- push_branch: "*"
+  workflow: debug
+```
+ - That's all for bitrise console
+
+## Let's take care of our project directory
+
+https://docs.fastlane.tools/
+
+ - cd your project
+ - cd ios folder
+ - intall fastlane `sudo gem install fastlane -NV`
+ - then init `fastlane init` (enter your appleId)
+ - find FastFile and edit it (create lane for execute after pushing, for example lane:beta)
+```
+lane :beta do
+increment_build_number(
+    build_number: latest_testflight_build_number + 1,
+    xcodeproj: "yourproj.xcodeproj"
+  )
+    gym(scheme: "yourproj", workspace: 'yourworkspace.xcworkspace') # or project: 'yourproj.xcodeproj'
+    pilot(skip_submission: true, skip_waiting_for_build_processing: true)
+    slack(channel: "ties", message: "Successfully upload to TestFlight new version")
+  end
+```
+ - Now push this to master branch and bitrise start building and upload to iTunes your App
+
+## That's all =)

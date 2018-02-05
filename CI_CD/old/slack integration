@@ -1,0 +1,38 @@
+For integration with slack add in fastfile:
+
+```
+  before_all do
+    ENV["SLACK_URL"] = "https://hooks.slack.com/services/..."
+  end
+```
+
+Get web hook link: https://eleken.slack.com/apps/new/A0F7XDUAZ-incoming-webhooks
+
+```
+
+  after_all do |beta|
+    # This block is called, only if the executed lane was successful
+    slack(channel: "ties", message: "Successfully deployed new TiesApp beta update to TestFlight.")
+  end
+
+  after_all do |dev|
+    # This block is called, only if the executed lane was successful
+    slack(channel: "ties", message: "Build succeeded - Ios")
+  end
+
+  error do |beta, exception|
+    slack(channel: "ties", message: "Error while deploying new TiesApp beta update to TestFlight.", success: false)
+    # slack(
+    #   message: exception.message,
+    #   success: false
+    # )
+  end
+  error do |dev, exception|
+    slack(channel: "ties", message: "Ios error - #{exception.to_s}", success: false)
+    # slack(
+    #   message: exception.message,
+    #   success: false
+    # )
+  end
+
+```
