@@ -1,4 +1,6 @@
-# Create React native app on bitrise.io
+# Configure bitrise with fastlane
+
+ ## Create React native app on bitrise.io
 
  ## Use hints from bitrise.io and configure git URL etc.
  Don't forget about Settings-> Stack selector and Project Type Selector
