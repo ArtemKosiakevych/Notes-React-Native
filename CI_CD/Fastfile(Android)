@@ -1,0 +1,15 @@
+fastlane_version "2.44.1"
+
+default_platform :android
+
+platform :android do
+
+  desc "Submit a new Beta Build to Crashlytics Beta"
+  lane :beta do
+    gradle(task: "assembleStagingRelease")
+    crashlytics(
+      api_token: "YOUR_TOKEN",
+      build_secret: "YOUR_SECRET"
+    )
+  end
+end

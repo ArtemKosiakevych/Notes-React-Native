@@ -1,0 +1,61 @@
+fastlane_version "2.44.1"
+
+default_platform :ios
+
+platform :ios do
+  before_all do
+    cocoapods
+  end
+
+  lane :beta do
+
+    # Set bundle identifier ---------------->
+    update_app_identifier(
+      xcodeproj: "YourProj.xcodeproj",
+      plist_path: "YourProj/Info.plist",
+      app_identifier: "com.bundle.adhoc"
+    )
+
+    # Disable automatic code signing ---------------->
+    automatic_code_signing(use_automatic_signing: false)
+
+    # Download Profile ---------------->    
+    match(type: "adhoc", app_identifier: "com.bundle.adhoc", readonly: true)
+    sigh(
+      adhoc: true,      
+      app_identifier: "com.bundle.adhoc",
+      provisioning_name: "match AdHoc com.bundle.adhoc",
+      team_id: "TEAM_ID",
+      readonly: true
+    )
+
+    # Select Profile ---------------->    
+    update_project_provisioning(
+        xcodeproj: "YourProj.xcodeproj",
+        target_filter: '.*',
+        profile: "./AdHoc_com.bundle.adhoc.mobileprovision",
+        build_configuration: "Release"
+    )
+
+    # Archive app ---------------->    
+    gym(
+      silent: true,
+      scheme: "YourProj", 
+      export_method: "ad-hoc", 
+      export_team_id: 'TEAM_ID', #example J62NLX6627
+      codesigning_identity: "iPhone Distribution: COMPANY_NAME",
+      export_options: {
+        provisioningProfiles: { 
+          "com.bundle.adhoc" => "match AdHoc com.bundle.adhoc"
+        }
+      }
+    )
+
+    # Upload to Beta ---------------->   
+    crashlytics(
+      api_token: "YOUR_TOKEN",
+      build_secret: "YOUR_SECRET"
+    )
+  end
+
+end

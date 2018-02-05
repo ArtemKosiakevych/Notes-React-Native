@@ -1,0 +1,30 @@
+---
+format_version: 1.3.1
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+workflows:
+  beta:
+    steps:
+    - script@1.1.5:
+        title: Uploading to Beta
+        inputs:
+        - content: |-
+            #!/bin/bash
+            # fail if any commands fails
+            set -e
+            # debug log
+            set -x
+            # write your script here
+            npm install
+            envman add --key ENVFILE --value .env.sandbox
+    - install-missing-android-tools@2.0.6: {}
+    - gradle-runner@1.8.0:
+        inputs:
+        - gradle_task: "$GRADLE_TASK"
+    - deploy-to-bitrise-io@1.3.10: {}
+    - fastlane@2.3.9:
+        inputs:
+        - lane: beta
+        - work_dir: "$BITRISE_SOURCE_DIR/android"
+    before_run:
+    after_run:

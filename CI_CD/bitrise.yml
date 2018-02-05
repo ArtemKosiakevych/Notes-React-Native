@@ -1,0 +1,48 @@
+---
+format_version: 1.3.1
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+trigger_map:
+- push_branch: develop
+  workflow: beta
+workflows:
+  _run_from_repo:
+    steps:
+    - activate-ssh-key:
+        run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+    - script@1.1.5:
+        inputs:
+        # Check documentation on GitLab API documentation
+        - content: 'curl --request POST --header "PRIVATE-TOKEN: YOUR_TOKEN"
+            "https://example.com/api/v4/projects/project_id/statuses/${BITRISE_GIT_COMMIT}?state=running&name=bitrise&target_url=${BITRISE_BUILD_URL}"'
+        title: send build status to gitlab about running build
+    - git-clone: {}
+    - script:
+        title: continue from repo
+        inputs:
+        - content: |-
+            set -ex
+            bitrise run "${BITRISE_TRIGGERED_WORKFLOW_ID}"
+        - working_dir: ios/ # For android set android/
+    - script@1.1.5:
+        is_always_run: true
+        inputs:
+        - content: |-
+            if [ "$BITRISE_BUILD_STATUS" == 0 ]
+            then
+            # Build success
+            curl --request POST --header "PRIVATE-TOKEN: YOUR_TOKEN" "https://example.com/api/v4/projects/project_id/statuses/${BITRISE_GIT_COMMIT}?state=success&name=bitrise&target_url=${BITRISE_BUILD_URL}"'
+            else
+            # Build failed
+            curl --request POST --header "PRIVATE-TOKEN: YOUR_TOKEN" "https://example.com/api/v4/projects/project_id/statuses/${BITRISE_GIT_COMMIT}?state=failed&name=bitrise&target_url=${BITRISE_BUILD_URL}"'
+            fi
+        title: Send status
+    before_run: []
+    after_run: []
+  beta:
+    after_run:
+    - _run_from_repo
+    before_run: []
+app:
+  envs:
+  - MATCH_PASSWORD: YOUR_MATCH_PASSWORD
+  - FASTLANE_PASSWORD: YOUR_FASTLANE_PASSWORD
