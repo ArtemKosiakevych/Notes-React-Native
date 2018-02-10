@@ -6,3 +6,4 @@ Notes about different things (React Native)
  - GIT notes helper
  - Testing sagas (Redux)
  - Upgrading React Native and React version of existing app
+ - Utils helper for different things 
