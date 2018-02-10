@@ -21,3 +21,14 @@ for (let file of files) {
     console.log('1') 
   }
 ```
+
+# Map files
+```js
+const fs = require('fs');
+
+fs.readdir('./YOUR_DIRECTORY/', (err, files) => {
+  files.forEach(file => {
+    console.log(`${file`);
+  });
+});
+```
