@@ -3,7 +3,7 @@
 ### Step 1: Install tool
  - `npm install -g react-native-git-upgrade`
 ### Step 2: Run upgrade
- - Inside your working directory, run `react-native-git-upgrade` (with old RN and react version)
+ - Inside your working directory, run `react-native-git-upgrade` (with old RN and react version). Resolve conflicts, be careful in `project.pbxproj` and re-link libs after resoving conflicts in this file
 ### Step 3: Log .patch file
  - `ls $TMPDIR/react-native-git-upgrade` - you'll find your corresponding .patch file, the name will correspond to the versions you're upgrading between.
 ### Step 4: Apply .patch changes
